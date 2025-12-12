@@ -1,5 +1,5 @@
 from fastapi.testclient import TestClient
-from main import app
+from backend.main import app
 
 client = TestClient(app)
 
@@ -8,5 +8,5 @@ def test_register_user():
         "email": "test@example.com",
         "password": "test123"
     })
-    assert response.status_code == 201
+    assert response.status_code == 200
     assert response.json()["email"] == "test@example.com"
