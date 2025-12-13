@@ -1,14 +1,17 @@
 from fastapi.testclient import TestClient
 from backend.main import app
-from backend.routes.auth import get_current_user
+from backend.utils.auth import get_current_user  # correct import
 
+# ----------------- Fake JWT Dependency -----------------
 def fake_current_user():
-    return {"email": "test@example.com", "role": "user"}
+    # Make this user 'admin' to allow delete/restock tests
+    return {"email": "test@example.com", "role": "admin"}
 
 app.dependency_overrides[get_current_user] = fake_current_user
 
 client = TestClient(app)
 
+# ----------------- CREATE -----------------
 def test_add_sweet():
     response = client.post("/api/sweets", json={
         "name": "Gulab Jamun",
@@ -20,14 +23,16 @@ def test_add_sweet():
     data = response.json()
     assert data["name"] == "Gulab Jamun"
     assert data["quantity"] == 100
+    assert "id" in data
 
 def test_add_sweet_missing_field():
     response = client.post("/api/sweets", json={
         "name": "Jalebi",
         "price": 40.0
     })
-    assert response.status_code == 422
+    assert response.status_code == 422  # validation error
 
+# ----------------- READ -----------------
 def test_list_sweets():
     client.post("/api/sweets", json={
         "name": "Rasgulla",
@@ -40,4 +45,74 @@ def test_list_sweets():
     assert response.status_code == 200
     data = response.json()
     assert len(data) >= 1
-    assert data[0]["name"] == "Rasgulla"
+    assert any(s["name"] == "Rasgulla" for s in data)
+
+# ----------------- SEARCH -----------------
+def test_search_sweets():
+    response = client.get("/api/sweets/search", params={"name": "rasg"})
+    assert response.status_code == 200
+    data = response.json()
+    assert any("rasg" in s["name"].lower() for s in data)
+
+# ----------------- PURCHASE -----------------
+def test_purchase_sweet():
+    # Add a sweet first
+    res = client.post("/api/sweets", json={
+        "name": "Ladoo",
+        "category": "Indian",
+        "price": 30.0,
+        "quantity": 5
+    })
+    sweet_id = res.json()["id"]
+
+    response = client.post(f"/api/sweets/{sweet_id}/purchase")
+    assert response.status_code == 200
+    assert response.json()["message"] == "Purchased successfully"
+
+# ----------------- RESTOCK -----------------
+def test_restock_sweet():
+    # Add a sweet first
+    res = client.post("/api/sweets", json={
+        "name": "Barfi",
+        "category": "Indian",
+        "price": 20.0,
+        "quantity": 2
+    })
+    sweet_id = res.json()["id"]
+
+    response = client.post(f"/api/sweets/{sweet_id}/restock", params={"quantity": 5})
+    assert response.status_code == 200
+    assert "Restocked 5 units" in response.json()["message"]
+
+# ----------------- UPDATE -----------------
+def test_update_sweet():
+    res = client.post("/api/sweets", json={
+        "name": "Kaju Katli",
+        "category": "Indian",
+        "price": 120.0,
+        "quantity": 10
+    })
+    sweet_id = res.json()["id"]
+
+    response = client.put(f"/api/sweets/{sweet_id}", json={
+        "name": "Kaju Katli Premium",
+        "category": "Indian",
+        "price": 150.0,
+        "quantity": 15
+    })
+    assert response.status_code == 200
+    assert response.json()["message"] == "Updated successfully"
+
+# ----------------- DELETE -----------------
+def test_delete_sweet():
+    res = client.post("/api/sweets", json={
+        "name": "Peda",
+        "category": "Indian",
+        "price": 25.0,
+        "quantity": 10
+    })
+    sweet_id = res.json()["id"]
+
+    response = client.delete(f"/api/sweets/{sweet_id}")
+    assert response.status_code == 200
+    assert response.json()["message"] == "Deleted successfully"
