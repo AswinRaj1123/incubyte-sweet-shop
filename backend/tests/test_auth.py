@@ -13,17 +13,18 @@ def test_register_user():
 
 def test_login_success():
     # First register a user
-    client.post("/api/auth/register", json={
+    reg_response = client.post("/api/auth/register", json={
         "email": "login@test.com",
         "password": "test123"
     })
+    assert reg_response.status_code == 200
     
     # Now login
     response = client.post("/api/auth/login", json={
         "email": "login@test.com",
         "password": "test123"
     })
-    assert response.status_code == 200
+    assert response.status_code == 200, f"Login failed: {response.json()}"
     assert "token" in response.json()
 
 def test_login_wrong_password():

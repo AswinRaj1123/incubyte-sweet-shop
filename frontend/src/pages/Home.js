@@ -13,7 +13,6 @@ const Home = () => {
 
   const fetchSweets = async () => {
     try {
-      let url = '/api/sweets';
       const params = [];
       
       if (search) params.push(`name=${search}`);
@@ -21,9 +20,9 @@ const Home = () => {
       if (minPrice) params.push(`min_price=${minPrice}`);
       if (maxPrice) params.push(`max_price=${maxPrice}`);
       
-      if (params.length > 0) {
-        url = `/api/sweets/search?${params.join('&')}`;
-      }
+      const url = params.length > 0 
+        ? `/api/sweets/search?${params.join('&')}`
+        : `/api/sweets/search`;
       
       const response = await api.get(url);
       setSweets(response.data);
@@ -59,6 +58,8 @@ const Home = () => {
     setCategory('');
     setMinPrice('');
     setMaxPrice('');
+    // Fetch all sweets without filters
+    setTimeout(() => fetchSweets(), 0);
   };
 
   const handlePurchase = () => {

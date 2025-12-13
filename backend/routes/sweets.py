@@ -45,6 +45,40 @@ async def list_sweets(current_user: dict = Depends(get_current_user)):
         all_sweets = list(_fake_sweets)
     return all_sweets
 
+# ---------------- SEARCH (MUST BE BEFORE /{sweet_id} ROUTES) ----------------
+@router.get("/search")
+async def search_sweets(name: str = None, category: str = None, min_price: float = None, max_price: float = None, current_user: dict = Depends(get_current_user)):
+    query = {}
+    if name:
+        query["name"] = {"$regex": name, "$options": "i"}  # case insensitive
+    if category:
+        query["category"] = category
+    if min_price or max_price:
+        query["price"] = {}
+        if min_price: query["price"]["$gte"] = min_price
+        if max_price: query["price"]["$lte"] = max_price
+
+    results = []
+    try:
+        async for sweet in sweets.find(query):
+            sweet["id"] = str(sweet["_id"])
+            sweet.pop("_id", None)
+            results.append(sweet)
+    except Exception:
+        for sweet in _fake_sweets:
+            name_match = True
+            if name:
+                name_match = name.lower() in sweet.get("name", "").lower()
+            cat_match = (category is None) or sweet.get("category") == category
+            price_ok = True
+            if min_price is not None:
+                price_ok = sweet.get("price", 0) >= min_price
+            if max_price is not None:
+                price_ok = price_ok and sweet.get("price", 0) <= max_price
+            if name_match and cat_match and price_ok:
+                results.append(sweet)
+    return results
+
 # ---------------- UPDATE ----------------
 @router.put("/{sweet_id}")
 async def update_sweet(
@@ -92,39 +126,6 @@ async def delete_sweet(
         if len(_fake_sweets) == before:
             raise HTTPException(status_code=404, detail="Sweet not found")
     return {"message": "Deleted successfully"}
-
-# ---------------- SEARCH ----------------
-@router.get("/search")
-async def search_sweets(name: str = None, category: str = None, min_price: float = None, max_price: float = None, current_user: dict = Depends(get_current_user)):
-    query = {}
-    if name:
-        query["name"] = {"$regex": name, "$options": "i"}  # case insensitive
-    if category:
-        query["category"] = category
-    if min_price or max_price:
-        query["price"] = {}
-        if min_price: query["price"]["$gte"] = min_price
-        if max_price: query["price"]["$lte"] = max_price
-
-    results = []
-    try:
-        async for sweet in sweets.find(query):
-            sweet["id"] = str(sweet["_id"])
-            results.append(sweet)
-    except Exception:
-        for sweet in _fake_sweets:
-            name_match = True
-            if name:
-                name_match = name.lower() in sweet.get("name", "").lower()
-            cat_match = (category is None) or sweet.get("category") == category
-            price_ok = True
-            if min_price is not None:
-                price_ok = sweet.get("price", 0) >= min_price
-            if max_price is not None:
-                price_ok = price_ok and sweet.get("price", 0) <= max_price
-            if name_match and cat_match and price_ok:
-                results.append(sweet)
-    return results
 
 # ---------------- PURCHASE ----------------
 @router.post("/{sweet_id}/purchase")
