@@ -44,6 +44,14 @@ The frontend will open at http://localhost:3000
 
 **Note:** To access admin features, register as an admin using the admin key: `admin123`
 
+## Database Setup Note
+
+The `.env` file is gitignored for security. Create one in `/backend` with:
+MONGODB_URL=mongodb://localhost:27017  # or your Atlas string
+JWT_SECRET=your-secret-key-here
+
+Alternatively, run MongoDB locally (default port 27017) — no .env needed for basic testing.
+
 ## Screenshots
 
 Here's what the app looks like:
@@ -68,7 +76,7 @@ I wrote tests for the backend covering authentication, all CRUD operations, sear
 
 <img width="948" height="415" alt="Test Report Image" src="https://github.com/user-attachments/assets/d51b997a-a2af-4661-aea1-ffa76281532e" />
 
-## How I Used AI Tools
+## My AI Usage
 
 I want to be transparent about using AI during this project. I used it as a learning and productivity tool, but all the code and decisions are mine.
 
