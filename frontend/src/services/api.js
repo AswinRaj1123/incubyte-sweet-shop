@@ -1,12 +1,10 @@
 import axios from 'axios';
 
-const API_URL = 'http://127.0.0.1:8000';  // your backend
-
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: 'http://127.0.0.1:8000',  // your FastAPI backend
 });
 
-// Add token to every request if available
+// Automatically add JWT token to every request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
