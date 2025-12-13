@@ -1,5 +1,11 @@
 from fastapi.testclient import TestClient
 from backend.main import app
+from backend.routes.auth import get_current_user
+
+def fake_current_user():
+    return {"email": "test@example.com", "role": "user"}
+
+app.dependency_overrides[get_current_user] = fake_current_user
 
 client = TestClient(app)
 
@@ -20,4 +26,18 @@ def test_add_sweet_missing_field():
         "name": "Jalebi",
         "price": 40.0
     })
-    assert response.status_code == 422  # validation error
+    assert response.status_code == 422
+
+def test_list_sweets():
+    client.post("/api/sweets", json={
+        "name": "Rasgulla",
+        "category": "Bengali",
+        "price": 60.0,
+        "quantity": 50
+    })
+
+    response = client.get("/api/sweets")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) >= 1
+    assert data[0]["name"] == "Rasgulla"
