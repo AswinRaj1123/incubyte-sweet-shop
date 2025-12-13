@@ -1,16 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Grid, TextField, Typography, Box, CircularProgress } from '@mui/material';
+import { Container, Grid, TextField, Typography, Box, CircularProgress, MenuItem, Button } from '@mui/material';
 import SweetCard from '../components/SweetCard';
 import api from '../services/api';
 
 const Home = () => {
   const [sweets, setSweets] = useState([]);
   const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
   const [loading, setLoading] = useState(true);
 
   const fetchSweets = async () => {
     try {
-      const response = await api.get(search ? `/api/sweets/search?name=${search}` : '/api/sweets');
+      let url = '/api/sweets';
+      const params = [];
+      
+      if (search) params.push(`name=${search}`);
+      if (category) params.push(`category=${category}`);
+      if (minPrice) params.push(`min_price=${minPrice}`);
+      if (maxPrice) params.push(`max_price=${maxPrice}`);
+      
+      if (params.length > 0) {
+        url = `/api/sweets/search?${params.join('&')}`;
+      }
+      
+      const response = await api.get(url);
       setSweets(response.data);
       setLoading(false);
     } catch (err) {
@@ -27,6 +42,25 @@ const Home = () => {
     setSearch(e.target.value);
   };
 
+  const handleCategoryChange = (e) => {
+    setCategory(e.target.value);
+  };
+
+  const handleMinPriceChange = (e) => {
+    setMinPrice(e.target.value);
+  };
+
+  const handleMaxPriceChange = (e) => {
+    setMaxPrice(e.target.value);
+  };
+
+  const handleResetFilters = () => {
+    setSearch('');
+    setCategory('');
+    setMinPrice('');
+    setMaxPrice('');
+  };
+
   const handlePurchase = () => {
     fetchSweets();  // refresh after purchase
   };
@@ -37,15 +71,68 @@ const Home = () => {
         Available Sweets
       </Typography>
 
-      <Box sx={{ mb: 4, maxWidth: 400, mx: 'auto' }}>
+      <Box sx={{ mb: 4, display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
         <TextField
-          fullWidth
           label="Search by name"
           value={search}
           onChange={handleSearch}
           onKeyDown={(e) => e.key === 'Enter' && fetchSweets()}
           variant="outlined"
+          size="small"
+          sx={{ minWidth: 200 }}
         />
+        
+        <TextField
+          select
+          label="Category"
+          value={category}
+          onChange={handleCategoryChange}
+          variant="outlined"
+          size="small"
+          sx={{ minWidth: 150 }}
+        >
+          <MenuItem value="">All Categories</MenuItem>
+          <MenuItem value="Indian">Indian</MenuItem>
+          <MenuItem value="Western">Western</MenuItem>
+          <MenuItem value="Bengali">Bengali</MenuItem>
+          <MenuItem value="Gujarati">Gujarati</MenuItem>
+        </TextField>
+        
+        <TextField
+          label="Min Price"
+          type="number"
+          value={minPrice}
+          onChange={handleMinPriceChange}
+          variant="outlined"
+          size="small"
+          sx={{ minWidth: 120 }}
+        />
+        
+        <TextField
+          label="Max Price"
+          type="number"
+          value={maxPrice}
+          onChange={handleMaxPriceChange}
+          variant="outlined"
+          size="small"
+          sx={{ minWidth: 120 }}
+        />
+        
+        <Button 
+          variant="contained" 
+          onClick={fetchSweets}
+          size="small"
+        >
+          Filter
+        </Button>
+        
+        <Button 
+          variant="outlined" 
+          onClick={handleResetFilters}
+          size="small"
+        >
+          Reset
+        </Button>
       </Box>
 
       {loading ? (

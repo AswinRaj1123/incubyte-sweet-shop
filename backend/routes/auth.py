@@ -4,8 +4,19 @@ from passlib.context import CryptContext
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from fastapi.security import OAuth2PasswordBearer
+from pydantic import BaseModel
+from typing import Optional
 
 from ..database import users  # MongoDB users collection
+
+# =========================
+# MODELS
+# =========================
+
+class AuthRequest(BaseModel):
+    email: str
+    password: str
+    admin_key: Optional[str] = None
 
 # =========================
 # CONFIG
@@ -58,62 +69,82 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
 # =========================
 
 @router.post("/register")
-async def register(user_data: dict):
-    # Check if user already exists
-    existing = await users.find_one({"email": user_data["email"]})
+async def register(user_data: AuthRequest):
+    try:
+        # Check if user already exists
+        existing = await users.find_one({"email": user_data.email})
 
-    if existing:
-        return {
-            "email": existing["email"],
-            "id": str(existing["_id"]),
+        if existing:
+            return {
+                "email": existing["email"],
+                "id": str(existing["_id"]),
+            }
+
+        # Hash password
+        hashed_password = pwd_context.hash(user_data.password)
+
+        # Check if this is an admin registration (if admin_key matches)
+        role = "user"
+        if user_data.admin_key == "admin123":
+            role = "admin"
+
+        new_user = {
+            "email": user_data.email,
+            "hashed_password": hashed_password,
+            "role": role,
         }
 
-    # Hash password
-    hashed_password = pwd_context.hash(user_data["password"])
+        result = await users.insert_one(new_user)
 
-    new_user = {
-        "email": user_data["email"],
-        "hashed_password": hashed_password,
-        "role": "user",  # default role
-    }
-
-    result = await users.insert_one(new_user)
-
-    return {
-        "email": user_data["email"],
-        "id": str(result.inserted_id),
-    }
+        return {
+            "email": user_data.email,
+            "id": str(result.inserted_id),
+            "role": role,
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Registration failed: {str(e)}"
+        )
 
 # =========================
 # LOGIN
 # =========================
 
 @router.post("/login")
-async def login(user_data: dict):
-    user = await users.find_one({"email": user_data["email"]})
+async def login(user_data: AuthRequest):
+    try:
+        user = await users.find_one({"email": user_data.email})
 
-    if not user or not pwd_context.verify(
-        user_data["password"], user["hashed_password"]
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Wrong email or password",
+        if not user or not pwd_context.verify(
+            user_data.password, user["hashed_password"]
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Wrong email or password",
+            )
+
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+
+        token = jwt.encode(
+            {
+                "sub": user["email"],
+                "role": user.get("role", "user"),
+                "exp": expire,
+            },
+            SECRET_KEY,
+            algorithm=ALGORITHM,
         )
 
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-
-    token = jwt.encode(
-        {
-            "sub": user["email"],
-            "role": user.get("role", "user"),
-            "exp": expire,
-        },
-        SECRET_KEY,
-        algorithm=ALGORITHM,
-    )
-
-    return {
-        "token": token,
-        "email": user["email"],
-        "role": user["role"],
-    }
+        return {
+            "token": token,
+            "email": user["email"],
+            "role": user["role"],
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Login failed: {str(e)}"
+        )

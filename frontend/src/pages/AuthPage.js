@@ -9,6 +9,7 @@ const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [adminKey, setAdminKey] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -17,7 +18,14 @@ const AuthPage = () => {
     setError('');
     try {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-      const response = await api.post(endpoint, { email, password });
+      const payload = { email, password };
+      
+      // Add admin key if registering as admin
+      if (!isLogin && adminKey) {
+        payload.admin_key = adminKey;
+      }
+      
+      const response = await api.post(endpoint, payload);
 
       if (isLogin) {
         localStorage.setItem('token', response.data.token);
@@ -63,6 +71,18 @@ const AuthPage = () => {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
+          
+          {!isLogin && (
+            <TextField
+              label="Admin Key (optional)"
+              type="password"
+              fullWidth
+              margin="normal"
+              value={adminKey}
+              onChange={(e) => setAdminKey(e.target.value)}
+              helperText="Enter admin key to register as admin"
+            />
+          )}
 
           {error && <Alert severity={error.includes('successful') ? 'success' : 'error'} sx={{ mt: 2 }}>{error}</Alert>}
 

@@ -1,13 +1,22 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { AppBar, Toolbar, Typography, Button } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-const Navbar = ({ isAdmin }) => {
+const Navbar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [userRole, setUserRole] = useState(localStorage.getItem('role'));
+
+  useEffect(() => {
+    // Update role whenever location changes (e.g., after login)
+    const role = localStorage.getItem('role');
+    setUserRole(role);
+  }, [location]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
+    setUserRole(null);
     navigate('/login');
   };
 
@@ -17,7 +26,7 @@ const Navbar = ({ isAdmin }) => {
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
           Sweet Shop Management
         </Typography>
-        {isAdmin && (
+        {userRole === 'admin' && (
           <Button color="inherit" onClick={() => navigate('/admin')}>
             Admin Panel
           </Button>
