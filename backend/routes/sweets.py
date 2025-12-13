@@ -79,6 +79,9 @@ async def add_sweet(sweet: Sweet, current_user: dict = Depends(get_current_user)
             # Fallback: save to in-memory store for testing
             sweet_dict["id"] = str(len(_fake_sweets) + 1)
             _fake_sweets.append(dict(sweet_dict))
+        
+        # Remove MongoDB internal field if present
+        sweet_dict.pop("_id", None)
             
         return sweet_dict
         
@@ -227,30 +230,32 @@ async def update_sweet(
         HTTPException 400: If sweet_id is invalid
         HTTPException 404: If sweet not found
     """
-    try:
-        # Validate that sweet_id is a valid MongoDB ObjectId
-        if not ObjectId.is_valid(sweet_id):
-            raise HTTPException(status_code=400, detail="Invalid sweet ID format")
+    # Try MongoDB first if valid ObjectId
+    if ObjectId.is_valid(sweet_id):
+        try:
+            # Update sweet in MongoDB
+            result = await sweets.update_one(
+                {"_id": ObjectId(sweet_id)},
+                {"$set": update_data.model_dump()}
+            )
 
-        # Update sweet in MongoDB
-        result = await sweets.update_one(
-            {"_id": ObjectId(sweet_id)},
-            {"$set": update_data.model_dump()}
-        )
-
-        if result.modified_count == 0:
-            raise HTTPException(status_code=404, detail="Sweet not found")
+            if result.modified_count == 0:
+                raise HTTPException(status_code=404, detail="Sweet not found")
             
-    except HTTPException:
-        raise
-    except:
-        # Fallback: update in in-memory store for testing
-        target = next((s for s in _fake_sweets if s.get("id") == sweet_id), None)
-        if not target:
-            raise HTTPException(status_code=404, detail="Sweet not found")
-        target.update(update_data.model_dump())
+            return {"message": "Updated successfully"}
+                
+        except HTTPException:
+            raise
+        except:
+            pass  # Fall through to in-memory store
+    
+    # Fallback: update in in-memory store for testing
+    target = next((s for s in _fake_sweets if s.get("id") == sweet_id), None)
+    if not target:
+        raise HTTPException(status_code=404, detail="Sweet not found")
+    target.update(update_data.model_dump())
         
-    return {"message": "Sweet updated successfully"}
+    return {"message": "Updated successfully"}
 
 
 # ============================================================================
@@ -284,27 +289,28 @@ async def delete_sweet(
     if current_user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Only admins can delete sweets")
 
-    try:
-        # Validate sweet_id format
-        if not ObjectId.is_valid(sweet_id):
-            raise HTTPException(status_code=400, detail="Invalid sweet ID format")
-
-        # Delete from MongoDB
-        result = await sweets.delete_one({"_id": ObjectId(sweet_id)})
-        if result.deleted_count == 0:
-            raise HTTPException(status_code=404, detail="Sweet not found")
+    # Try MongoDB first if valid ObjectId
+    if ObjectId.is_valid(sweet_id):
+        try:
+            # Delete from MongoDB
+            result = await sweets.delete_one({"_id": ObjectId(sweet_id)})
+            if result.deleted_count == 0:
+                raise HTTPException(status_code=404, detail="Sweet not found")
             
-    except HTTPException:
-        raise
-    except:
-        # Fallback: delete from in-memory store for testing
-        before_count = len(_fake_sweets)
-        _fake_sweets[:] = [s for s in _fake_sweets if s.get("id") != sweet_id]
-        if len(_fake_sweets) == before_count:
-            raise HTTPException(status_code=404, detail="Sweet not found")
+            return {"message": "Deleted successfully"}
+                
+        except HTTPException:
+            raise
+        except:
+            pass  # Fall through to in-memory store
+    
+    # Fallback: delete from in-memory store for testing
+    before_count = len(_fake_sweets)
+    _fake_sweets[:] = [s for s in _fake_sweets if s.get("id") != sweet_id]
+    if len(_fake_sweets) == before_count:
+        raise HTTPException(status_code=404, detail="Sweet not found")
             
-    return {"message": "Sweet deleted successfully"}
-
+    return {"message": "Deleted successfully"}
 
 # ============================================================================
 # PURCHASE - Decrease sweet quantity (User buys a sweet)
@@ -329,38 +335,39 @@ async def purchase_sweet(sweet_id: str, current_user: dict = Depends(get_current
         HTTPException 400: If sweet_id is invalid or out of stock
         HTTPException 404: If sweet not found
     """
-    try:
-        # Validate sweet_id format
-        if not ObjectId.is_valid(sweet_id):
-            raise HTTPException(status_code=400, detail="Invalid sweet ID format")
+    # Try MongoDB first
+    if ObjectId.is_valid(sweet_id):
+        try:
+            # Find the sweet
+            sweet = await sweets.find_one({"_id": ObjectId(sweet_id)})
+            if not sweet:
+                raise HTTPException(status_code=404, detail="Sweet not found")
+                
+            # Check if in stock
+            if sweet["quantity"] <= 0:
+                raise HTTPException(status_code=400, detail="Out of stock")
+                
+            # Decrease quantity by 1
+            await sweets.update_one(
+                {"_id": ObjectId(sweet_id)},
+                {"$inc": {"quantity": -1}}  # $inc: -1 means decrease by 1
+            )
+            return {"message": "Purchased successfully"}
             
-        # Find the sweet
-        sweet = await sweets.find_one({"_id": ObjectId(sweet_id)})
-        if not sweet:
-            raise HTTPException(status_code=404, detail="Sweet not found")
-            
-        # Check if in stock
-        if sweet["quantity"] <= 0:
-            raise HTTPException(status_code=400, detail="Out of stock")
-            
-        # Decrease quantity by 1
-        await sweets.update_one(
-            {"_id": ObjectId(sweet_id)},
-            {"$inc": {"quantity": -1}}  # $inc: -1 means decrease by 1
-        )
+        except HTTPException:
+            raise
+        except:
+            pass  # Fall through to in-memory store
+    
+    # Fallback: purchase from in-memory store for testing
+    sweet = next((s for s in _fake_sweets if s.get("id") == sweet_id), None)
+    if not sweet:
+        raise HTTPException(status_code=404, detail="Sweet not found")
+    if sweet.get("quantity", 0) <= 0:
+        raise HTTPException(status_code=400, detail="Out of stock")
+    sweet["quantity"] -= 1
         
-    except HTTPException:
-        raise
-    except:
-        # Fallback: purchase from in-memory store for testing
-        sweet = next((s for s in _fake_sweets if s.get("id") == sweet_id), None)
-        if not sweet:
-            raise HTTPException(status_code=404, detail="Sweet not found")
-        if sweet.get("quantity", 0) <= 0:
-            raise HTTPException(status_code=400, detail="Out of stock")
-        sweet["quantity"] -= 1
-        
-    return {"message": "Purchase successful"}
+    return {"message": "Purchased successfully"}
 
 
 # ============================================================================

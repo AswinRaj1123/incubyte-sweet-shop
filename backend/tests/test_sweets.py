@@ -1,6 +1,10 @@
 from fastapi.testclient import TestClient
 from backend.main import app
 from backend.utils.auth import get_current_user  # correct import
+from backend.routes.sweets import _fake_sweets
+from backend.database import sweets
+import pytest
+import asyncio
 
 # ----------------- Fake JWT Dependency -----------------
 def fake_current_user():
@@ -10,6 +14,33 @@ def fake_current_user():
 app.dependency_overrides[get_current_user] = fake_current_user
 
 client = TestClient(app)
+
+# Clear fake sweets and MongoDB before each test to avoid conflicts
+@pytest.fixture(autouse=True)
+def clear_fake_sweets():
+    # Clear in-memory store
+    _fake_sweets.clear()
+    
+    # Clear MongoDB asynchronously
+    async def clear_db():
+        try:
+            await sweets.delete_many({})
+        except:
+            pass
+    
+    try:
+        asyncio.run(clear_db())
+    except:
+        pass
+    
+    yield
+    
+    # Clean up after test
+    _fake_sweets.clear()
+    try:
+        asyncio.run(clear_db())
+    except:
+        pass
 
 # ----------------- CREATE -----------------
 def test_add_sweet():
@@ -49,6 +80,14 @@ def test_list_sweets():
 
 # ----------------- SEARCH -----------------
 def test_search_sweets():
+    # Create a sweet to search for
+    client.post("/api/sweets", json={
+        "name": "Rasgulla",
+        "category": "Bengali",
+        "price": 60.0,
+        "quantity": 50
+    })
+    
     response = client.get("/api/sweets/search", params={"name": "rasg"})
     assert response.status_code == 200
     data = response.json()
