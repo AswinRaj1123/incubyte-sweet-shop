@@ -238,10 +238,10 @@ const Admin = () => {
       <Typography variant="h6" gutterBottom>
         Manage Sweets
       </Typography>
-      <Grid container spacing={3}>
+      <Grid container spacing={3} alignItems="stretch">
         {sweets.map((sweet) => (
           <Grid item xs={12} sm={6} md={4} key={sweet.id}>
-            <Paper elevation={0} sx={{ p: 1, borderRadius: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
               <SweetCard sweet={sweet} onPurchaseSuccess={fetchSweets} />
               <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
                 <Button variant="outlined" size="small" fullWidth onClick={() => setEditingSweet(sweet)}>
@@ -251,7 +251,7 @@ const Admin = () => {
                   Delete
                 </Button>
               </Box>
-            </Paper>
+            </Box>
           </Grid>
         ))}
       </Grid>

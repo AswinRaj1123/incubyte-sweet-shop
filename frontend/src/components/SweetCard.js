@@ -50,7 +50,8 @@ const SweetCard = ({ sweet, onPurchaseSuccess }) => {
 
   return (
     <Card sx={{
-      height: '100%',
+      width: '100%',
+      height: 440,
       display: 'flex',
       flexDirection: 'column',
       borderRadius: 3,
@@ -66,25 +67,48 @@ const SweetCard = ({ sweet, onPurchaseSuccess }) => {
       {/* Product Image */}
       <CardMedia
         component="img"
-        height="200"
-        image="https://via.placeholder.com/300x200?text=Sweet+Candy"
+        image={sweet.image_url || "https://via.placeholder.com/300x200?text=Sweet+Candy"}
         alt={sweet.name}
+        sx={{
+          width: '100%',
+          height: 180,
+          objectFit: 'cover',
+          objectPosition: 'center'
+        }}
+        onError={(e) => {
+          e.target.src = "https://via.placeholder.com/300x200?text=Sweet+Candy";
+        }}
       />
       
       {/* Product Information */}
-      <CardContent sx={{ flexGrow: 1, pb: 0 }}>
+      <CardContent sx={{ flexGrow: 1, pb: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {/* Product Name */}
-        <Typography gutterBottom variant="h6" component="div" fontWeight={700} sx={{ color: '#1f2937' }}>
-          {sweet.name}
-        </Typography>
+        <Box sx={{ minHeight: 28, mb: 0.5 }}>
+          <Typography
+            gutterBottom
+            variant="h6"
+            component="div"
+            fontWeight={700}
+            noWrap
+            sx={{
+              color: '#1f2937',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}
+          >
+            {sweet.name}
+          </Typography>
+        </Box>
         
         {/* Category */}
-        <Typography variant="body2" color="text.secondary">
-          Category: {sweet.category}
-        </Typography>
+        <Box sx={{ minHeight: 20 }}>
+          <Typography variant="body2" color="text.secondary" noWrap>
+            Category: {sweet.category}
+          </Typography>
+        </Box>
         
         {/* Price and Stock */}
-        <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box sx={{ mt: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           {/* Price */}
           <Typography variant="h6" fontWeight={700} sx={{ color: '#6366f1' }}>
             ₹{sweet.price}

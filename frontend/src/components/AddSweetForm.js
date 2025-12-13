@@ -26,7 +26,8 @@ const AddSweetForm = ({ sweetToEdit, onSuccess }) => {
     name: '',  // Sweet name
     category: '',  // Sweet category (Indian, Western, etc.)
     price: '',  // Price in rupees
-    quantity: ''  // Units in stock
+    quantity: '',  // Units in stock
+    image_url: ''  // Image URL for the sweet
   });
 
   /**
@@ -44,7 +45,8 @@ const AddSweetForm = ({ sweetToEdit, onSuccess }) => {
         name: sweetToEdit.name,
         category: sweetToEdit.category,
         price: sweetToEdit.price,
-        quantity: sweetToEdit.quantity
+        quantity: sweetToEdit.quantity,
+        image_url: sweetToEdit.image_url || ''
       });
     }
   }, [sweetToEdit]);  // Re-run when sweetToEdit changes
@@ -85,7 +87,7 @@ const AddSweetForm = ({ sweetToEdit, onSuccess }) => {
       }
 
       // Clear form fields after successful submission
-      setFormData({ name: '', category: '', price: '', quantity: '' });
+      setFormData({ name: '', category: '', price: '', quantity: '', image_url: '' });
 
       // Call parent callback to refresh sweet list and close edit mode
       onSuccess();
@@ -154,6 +156,16 @@ const AddSweetForm = ({ sweetToEdit, onSuccess }) => {
             fullWidth
             inputProps={{ step: '1' }}
             required
+          />
+
+          <TextField
+            label="Image URL"
+            name="image_url"
+            value={formData.image_url}
+            onChange={handleChange}
+            fullWidth
+            placeholder="https://example.com/image.jpg"
+            helperText="URL to the sweet's product image (optional)"
           />
 
           <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>

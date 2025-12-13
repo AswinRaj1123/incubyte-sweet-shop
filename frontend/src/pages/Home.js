@@ -192,7 +192,7 @@ const Home = () => {
         </Box>
       ) : (
         // Grid of sweet cards
-        <Grid container spacing={3}>
+        <Grid container spacing={3} alignItems="stretch">
           {sweets.map((sweet) => (
             <Grid item xs={12} sm={6} md={4} key={sweet.id}>
               <SweetCard 
