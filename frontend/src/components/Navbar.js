@@ -11,7 +11,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { AppBar, Toolbar, Typography, Button } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, Container } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const Navbar = () => {
@@ -53,29 +53,42 @@ const Navbar = () => {
 
   // ===== RENDER =====
   return (
-    <AppBar position="static" color="primary">
-      <Toolbar>
-        {/* App Title */}
-        <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          Sweet Shop Management
-        </Typography>
-        
-        {/* Admin Panel Button - Only visible for admin users */}
-        {userRole === 'admin' && (
-          <Button 
-            color="inherit" 
-            onClick={() => navigate('/admin')}
-            sx={{ mr: 2 }}
-          >
-            Admin Panel
+    <AppBar position="sticky" color="default" elevation={0} sx={{ 
+      borderBottom: '1px solid', 
+      borderColor: 'divider',
+      transition: 'all 0.3s ease',
+      backgroundColor: 'background.paper'
+    }}>
+      <Container maxWidth="lg">
+        <Toolbar sx={{ px: 0 }}>
+          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700 }}>
+            Sweet Shop
+          </Typography>
+
+          {userRole === 'admin' && (
+            <Button variant="text" onClick={() => navigate('/admin')} sx={{ 
+              mr: 1,
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                backgroundColor: 'action.hover',
+                transform: 'scale(1.05)'
+              }
+            }}>
+              Admin Panel
+            </Button>
+          )}
+
+          <Button variant="contained" onClick={handleLogout} sx={{
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              transform: 'translateY(-2px)',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+            }
+          }}>
+            Logout
           </Button>
-        )}
-        
-        {/* Logout Button */}
-        <Button color="inherit" onClick={handleLogout}>
-          Logout
-        </Button>
-      </Toolbar>
+        </Toolbar>
+      </Container>
     </AppBar>
   );
 };

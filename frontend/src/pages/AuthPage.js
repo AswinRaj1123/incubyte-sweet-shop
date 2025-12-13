@@ -17,7 +17,16 @@
 
 import React, { useState } from 'react';
 import {
-  Container, Paper, Tabs, Tab, Box, TextField, Button, Typography, Alert
+  Container,
+  Paper,
+  Tabs,
+  Tab,
+  Box,
+  TextField,
+  Button,
+  Typography,
+  Alert,
+  Divider
 } from '@mui/material';
 import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
@@ -78,78 +87,118 @@ const AuthPage = () => {
 
   // ===== RENDER =====
   return (
-    <Container maxWidth="sm" sx={{ mt: 10 }}>
-      <Paper elevation={6} sx={{ p: 4 }}>
-        {/* App Title */}
-        <Typography variant="h4" align="center" gutterBottom color="primary">
-          Sweet Shop Management
-        </Typography>
+    <Container maxWidth="sm" sx={{ mt: { xs: 6, md: 10 } }}>
+      <Paper elevation={3} sx={{ 
+        p: { xs: 3, md: 4 }, 
+        borderRadius: 3,
+        transition: 'all 0.3s ease',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+      }}>
+        <Box sx={{ textAlign: 'center', mb: 2 }}>
+          <Typography variant="h5" fontWeight={700}>
+            Sweet Shop Management
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Welcome back! Please {isLogin ? 'login' : 'register'} to continue.
+          </Typography>
+        </Box>
 
-        {/* Tab Selection - Switch between Login and Register */}
-        <Tabs 
-          value={isLogin ? 0 : 1} 
-          onChange={(_, v) => setIsLogin(v === 0)} 
-          centered 
-          sx={{ mb: 3 }}
+        <Tabs
+          value={isLogin ? 0 : 1}
+          onChange={(_, v) => setIsLogin(v === 0)}
+          centered
+          sx={{ mb: 2 }}
         >
           <Tab label="Login" />
           <Tab label="Register" />
         </Tabs>
 
-        {/* Authentication Form */}
-        <Box component="form" onSubmit={handleSubmit}>
-          {/* Email Input */}
+        <Divider sx={{ mb: 2 }} />
+
+        <Box component="form" onSubmit={handleSubmit} sx={{ display: 'grid', gap: 2 }}>
           <TextField
             label="Email"
             type="email"
             fullWidth
-            margin="normal"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+                },
+                '&.Mui-focused': {
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                }
+              }
+            }}
           />
-          
-          {/* Password Input */}
+
           <TextField
             label="Password"
             type="password"
             fullWidth
-            margin="normal"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+                },
+                '&.Mui-focused': {
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                }
+              }
+            }}
           />
-          
-          {/* Admin Key Input - Only shown in Register mode */}
+
           {!isLogin && (
             <TextField
               label="Admin Key (optional)"
               type="password"
               fullWidth
-              margin="normal"
               value={adminKey}
               onChange={(e) => setAdminKey(e.target.value)}
-              helperText="Enter admin key to register as admin"
+              helperText="Use admin key to register as admin"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+                  },
+                  '&.Mui-focused': {
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                  }
+                }
+              }}
             />
           )}
 
-          {/* Error/Success Message Display */}
           {error && (
-            <Alert 
-              severity={error.includes('successful') ? 'success' : 'error'} 
-              sx={{ mt: 2 }}
-            >
+            <Alert severity={error.includes('successful') ? 'success' : 'error'}>
               {error}
             </Alert>
           )}
 
-          {/* Submit Button */}
-          <Button 
-            type="submit" 
-            variant="contained" 
-            color="primary" 
-            fullWidth 
-            sx={{ mt: 3, py: 1.5 }}
+          <Button
+            type="submit"
+            variant="contained"
+            size="large"
+            sx={{ 
+              mt: 1, 
+              py: 1.25, 
+              borderRadius: 2,
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: '0 6px 16px rgba(0, 0, 0, 0.15)'
+              }
+            }}
+            fullWidth
           >
             {isLogin ? 'Login' : 'Register'}
           </Button>

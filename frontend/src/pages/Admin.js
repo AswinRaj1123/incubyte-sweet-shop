@@ -12,14 +12,17 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Container, 
-  Typography, 
-  Grid, 
-  Button, 
-  Box, 
-  TextField, 
-  MenuItem 
+import {
+  Container,
+  Typography,
+  Grid,
+  Button,
+  Box,
+  TextField,
+  MenuItem,
+  Paper,
+  Stack,
+
 } from '@mui/material';
 import SweetCard from '../components/SweetCard';
 import AddSweetForm from '../components/AddSweetForm';
@@ -129,154 +132,130 @@ const Admin = () => {
   // ===== RENDER =====
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
-      {/* Page Title */}
-      <Typography variant="h3" align="center" gutterBottom>
+      <Typography variant="h4" align="center" gutterBottom fontWeight={700}>
         Admin Panel
       </Typography>
 
-      {/* Add/Edit Sweet Form */}
-      <AddSweetForm 
-        sweetToEdit={editingSweet} 
+      <AddSweetForm
+        sweetToEdit={editingSweet}
         onSuccess={() => {
-          setEditingSweet(null);  // Clear editing state
-          fetchSweets();  // Refresh sweet list
-        }} 
+          setEditingSweet(null);
+          fetchSweets();
+        }}
       />
 
-      {/* Filter Bar */}
-      <Box sx={{ mb: 4, display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
-        {/* Search by Name */}
-        <TextField
-          label="Search by name"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          variant="outlined"
-          size="small"
-          sx={{ minWidth: 200 }}
-        />
-        
-        {/* Category Filter */}
-        <TextField
-          select
-          label="Category"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          variant="outlined"
-          size="small"
-          sx={{ minWidth: 150 }}
-        >
-          <MenuItem value="">All Categories</MenuItem>
-          <MenuItem value="Indian">Indian</MenuItem>
-          <MenuItem value="Western">Western</MenuItem>
-          <MenuItem value="Bengali">Bengali</MenuItem>
-          <MenuItem value="Gujarati">Gujarati</MenuItem>
-        </TextField>
-        
-        {/* Minimum Price Filter */}
-        <TextField
-          label="Min Price"
-          type="number"
-          value={minPrice}
-          onChange={(e) => setMinPrice(e.target.value)}
-          variant="outlined"
-          size="small"
-          sx={{ minWidth: 120 }}
-        />
-        
-        {/* Maximum Price Filter */}
-        <TextField
-          label="Max Price"
-          type="number"
-          value={maxPrice}
-          onChange={(e) => setMaxPrice(e.target.value)}
-          variant="outlined"
-          size="small"
-          sx={{ minWidth: 120 }}
-        />
-        
-        {/* Apply Filters Button */}
-        <Button 
-          variant="contained" 
-          onClick={fetchSweets}
-          size="small"
-        >
-          Filter
-        </Button>
-        
-        {/* Clear Filters Button */}
-        <Button 
-          variant="outlined" 
-          onClick={handleResetFilters}
-          size="small"
-        >
-          Reset
-        </Button>
-      </Box>
+      <Paper elevation={1} sx={{ p: 2, borderRadius: 2, mb: 3, 
+        transition: 'all 0.3s ease',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+        '&:hover': {
+          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
+        }
+      }}>
+        <Typography variant="h6" gutterBottom>
+          Filters
+        </Typography>
+        <Stack direction="row" spacing={2} useFlexGap flexWrap="wrap">
+          <TextField
+            label="Search by name"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            size="small"
+            sx={{ minWidth: 220 }}
+          />
+          <TextField
+            select
+            label="Category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            size="small"
+            sx={{ minWidth: 160 }}
+          >
+            <MenuItem value="">All Categories</MenuItem>
+            <MenuItem value="Indian">Indian</MenuItem>
+            <MenuItem value="Western">Western</MenuItem>
+            <MenuItem value="Bengali">Bengali</MenuItem>
+            <MenuItem value="Gujarati">Gujarati</MenuItem>
+          </TextField>
+          <TextField
+            label="Min Price"
+            type="number"
+            value={minPrice}
+            onChange={(e) => setMinPrice(e.target.value)}
+            size="small"
+            sx={{ minWidth: 130 }}
+          />
+          <TextField
+            label="Max Price"
+            type="number"
+            value={maxPrice}
+            onChange={(e) => setMaxPrice(e.target.value)}
+            size="small"
+            sx={{ minWidth: 130 }}
+          />
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button variant="contained" size="small" onClick={fetchSweets}>
+              Apply
+            </Button>
+            <Button variant="outlined" size="small" onClick={handleResetFilters}>
+              Reset
+            </Button>
+          </Box>
+        </Stack>
+      </Paper>
 
-      {/* Restock Section */}
-      <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
-        Restock Sweet
-      </Typography>
-      <Box sx={{ display: 'flex', gap: 2, mb: 4, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-        <TextField
-          label="Sweet ID"
-          value={restockId}
-          onChange={(e) => setRestockId(e.target.value)}
-          size="small"
-          placeholder="Paste sweet ID here"
-        />
-        <TextField
-          label="Quantity to add"
-          type="number"
-          value={restockQty}
-          onChange={(e) => setRestockQty(e.target.value)}
-          size="small"
-          placeholder="Number of units"
-        />
-        <Button 
-          variant="contained" 
-          onClick={handleRestock}
-          color="success"
-        >
+      <Paper elevation={1} sx={{ p: 2, borderRadius: 2, mb: 3,
+        transition: 'all 0.3s ease',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+        '&:hover': {
+          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
+        }
+      }}>
+        <Typography variant="h6" gutterBottom>
           Restock
-        </Button>
-      </Box>
+        </Typography>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <TextField
+            label="Sweet ID"
+            value={restockId}
+            onChange={(e) => setRestockId(e.target.value)}
+            size="small"
+            placeholder="Paste sweet ID"
+          />
+          <TextField
+            label="Quantity"
+            type="number"
+            value={restockQty}
+            onChange={(e) => setRestockQty(e.target.value)}
+            size="small"
+            placeholder="Units to add"
+          />
+          <Button variant="contained" color="success" onClick={handleRestock}>
+            Restock
+          </Button>
+        </Stack>
+      </Paper>
 
-      {/* Manage Sweets Section */}
-      <Typography variant="h5" gutterBottom>
+      <Typography variant="h6" gutterBottom>
         Manage Sweets
       </Typography>
-      <Grid container spacing={4}>
+      <Grid container spacing={3}>
         {sweets.map((sweet) => (
           <Grid item xs={12} sm={6} md={4} key={sweet.id}>
-            {/* Sweet Card */}
-            <SweetCard sweet={sweet} onPurchaseSuccess={fetchSweets} />
-            
-            {/* Edit and Delete Buttons */}
-            <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
-              <Button 
-                variant="outlined" 
-                size="small" 
-                fullWidth
-                onClick={() => setEditingSweet(sweet)}
-              >
-                Edit
-              </Button>
-              <Button 
-                variant="outlined" 
-                color="error" 
-                size="small" 
-                fullWidth
-                onClick={() => handleDelete(sweet.id)}
-              >
-                Delete
-              </Button>
-            </Box>
+            <Paper elevation={0} sx={{ p: 1, borderRadius: 2 }}>
+              <SweetCard sweet={sweet} onPurchaseSuccess={fetchSweets} />
+              <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
+                <Button variant="outlined" size="small" fullWidth onClick={() => setEditingSweet(sweet)}>
+                  Edit
+                </Button>
+                <Button variant="outlined" color="error" size="small" fullWidth onClick={() => handleDelete(sweet.id)}>
+                  Delete
+                </Button>
+              </Box>
+            </Paper>
           </Grid>
         ))}
       </Grid>
 
-      {/* No Sweets Message */}
       {sweets.length === 0 && (
         <Typography align="center" sx={{ mt: 4 }}>
           No sweets found. Try adjusting your filters or add a new sweet!

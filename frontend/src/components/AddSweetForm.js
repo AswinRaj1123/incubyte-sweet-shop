@@ -16,7 +16,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Box, TextField, Button, Typography } from '@mui/material';
+import { Box, TextField, Button, Typography, Paper, Stack } from '@mui/material';
 import api from '../services/api';
 
 const AddSweetForm = ({ sweetToEdit, onSuccess }) => {
@@ -97,85 +97,89 @@ const AddSweetForm = ({ sweetToEdit, onSuccess }) => {
 
   // ===== RENDER =====
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3, mb: 4 }}>
-      {/* Form Title - Dynamic based on create vs edit mode */}
-      <Typography variant="h5" gutterBottom>
-        {sweetToEdit ? 'Edit Sweet' : 'Add New Sweet'}
-      </Typography>
+    <Paper elevation={1} sx={{ 
+      p: { xs: 2, md: 3 }, 
+      borderRadius: 2, 
+      mt: 3, 
+      mb: 4,
+      transition: 'all 0.3s ease',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+      '&:hover': {
+        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
+      }
+    }}>
+      <Box component="form" onSubmit={handleSubmit}>
+        <Typography variant="h6" gutterBottom fontWeight={700}>
+          {sweetToEdit ? 'Edit Sweet' : 'Add New Sweet'}
+        </Typography>
 
-      {/* Sweet Name Input */}
-      <TextField
-        label="Name"
-        name="name"
-        value={formData.name}
-        onChange={handleChange}
-        fullWidth
-        margin="normal"
-        placeholder="e.g., Rasgulla, Laddu"
-        required
-      />
+        <Stack spacing={2}>
+          <TextField
+            label="Name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            fullWidth
+            placeholder="e.g., Rasgulla"
+            required
+          />
 
-      {/* Category Input */}
-      <TextField
-        label="Category"
-        name="category"
-        value={formData.category}
-        onChange={handleChange}
-        fullWidth
-        margin="normal"
-        placeholder="e.g., Indian, Western, Bengali"
-        required
-      />
+          <TextField
+            label="Category"
+            name="category"
+            value={formData.category}
+            onChange={handleChange}
+            fullWidth
+            placeholder="e.g., Indian"
+            required
+          />
 
-      {/* Price Input */}
-      <TextField
-        label="Price (₹)"
-        name="price"
-        type="number"
-        value={formData.price}
-        onChange={handleChange}
-        fullWidth
-        margin="normal"
-        placeholder="Enter price in rupees"
-        inputProps={{ step: "0.01" }}  // Allow decimal prices
-        required
-      />
+          <TextField
+            label="Price (₹)"
+            name="price"
+            type="number"
+            value={formData.price}
+            onChange={handleChange}
+            fullWidth
+            inputProps={{ step: '0.01' }}
+            required
+          />
 
-      {/* Quantity Input */}
-      <TextField
-        label="Quantity (units)"
-        name="quantity"
-        type="number"
-        value={formData.quantity}
-        onChange={handleChange}
-        fullWidth
-        margin="normal"
-        placeholder="Number of units in stock"
-        inputProps={{ step: "1" }}  // Only whole numbers
-        required
-      />
+          <TextField
+            label="Quantity"
+            name="quantity"
+            type="number"
+            value={formData.quantity}
+            onChange={handleChange}
+            fullWidth
+            inputProps={{ step: '1' }}
+            required
+          />
 
-      {/* Submit Button - Dynamic text based on create vs edit */}
-      <Button 
-        type="submit" 
-        variant="contained" 
-        color="primary" 
-        sx={{ mt: 2 }}
-      >
-        {sweetToEdit ? 'Update Sweet' : 'Add Sweet'}
-      </Button>
-
-      {/* Cancel Button - Only shown when editing */}
-      {sweetToEdit && (
-        <Button 
-          onClick={() => onSuccess()}  // Close edit mode
-          color="inherit" 
-          sx={{ mt: 2, ml: 2 }}
-        >
-          Cancel
-        </Button>
-      )}
-    </Box>
+          <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+            {sweetToEdit && (
+              <Button onClick={() => onSuccess()} color="inherit" sx={{
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  backgroundColor: 'action.hover'
+                }
+              }}>
+                Cancel
+              </Button>
+            )}
+            <Button type="submit" variant="contained" sx={{
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+              }
+            }}>
+              {sweetToEdit ? 'Update' : 'Add Sweet'}
+            </Button>
+          </Box>
+        </Stack>
+      </Box>
+    </Paper>
   );
 };
 

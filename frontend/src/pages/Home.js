@@ -11,15 +11,17 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Container, 
-  Grid, 
-  TextField, 
-  Typography, 
-  Box, 
-  CircularProgress, 
-  MenuItem, 
-  Button 
+import {
+  Container,
+  Grid,
+  TextField,
+  Typography,
+  Box,
+  CircularProgress,
+  MenuItem,
+  Button,
+  Paper,
+  Stack
 } from '@mui/material';
 import SweetCard from '../components/SweetCard';
 import api from '../services/api';
@@ -114,84 +116,73 @@ const Home = () => {
   // ===== RENDER =====
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      {/* Page Title */}
-      <Typography variant="h3" align="center" gutterBottom>
+      <Typography variant="h4" align="center" gutterBottom fontWeight={700}>
         Available Sweets
       </Typography>
 
-      {/* Filter Bar */}
-      <Box sx={{ mb: 4, display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
-        {/* Search by Name */}
-        <TextField
-          label="Search by name"
-          value={search}
-          onChange={handleSearch}
-          onKeyDown={(e) => e.key === 'Enter' && fetchSweets()}  // Search on Enter key
-          variant="outlined"
-          size="small"
-          sx={{ minWidth: 200 }}
-          placeholder="e.g., Gulab Jamun"
-        />
-        
-        {/* Category Filter Dropdown */}
-        <TextField
-          select
-          label="Category"
-          value={category}
-          onChange={handleCategoryChange}
-          variant="outlined"
-          size="small"
-          sx={{ minWidth: 150 }}
-        >
-          <MenuItem value="">All Categories</MenuItem>
-          <MenuItem value="Indian">Indian</MenuItem>
-          <MenuItem value="Western">Western</MenuItem>
-          <MenuItem value="Bengali">Bengali</MenuItem>
-          <MenuItem value="Gujarati">Gujarati</MenuItem>
-        </TextField>
-        
-        {/* Minimum Price Filter */}
-        <TextField
-          label="Min Price"
-          type="number"
-          value={minPrice}
-          onChange={handleMinPriceChange}
-          variant="outlined"
-          size="small"
-          sx={{ minWidth: 120 }}
-          placeholder="0"
-        />
-        
-        {/* Maximum Price Filter */}
-        <TextField
-          label="Max Price"
-          type="number"
-          value={maxPrice}
-          onChange={handleMaxPriceChange}
-          variant="outlined"
-          size="small"
-          sx={{ minWidth: 120 }}
-          placeholder="1000"
-        />
-        
-        {/* Apply Filters Button */}
-        <Button 
-          variant="contained" 
-          onClick={fetchSweets}
-          size="small"
-        >
-          Filter
-        </Button>
-        
-        {/* Clear Filters Button */}
-        <Button 
-          variant="outlined" 
-          onClick={handleResetFilters}
-          size="small"
-        >
-          Reset
-        </Button>
-      </Box>
+      <Paper elevation={1} sx={{ p: 2, borderRadius: 2, mb: 3,
+        transition: 'all 0.3s ease',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+        '&:hover': {
+          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
+        }
+      }}>
+        <Stack direction="row" spacing={2} useFlexGap flexWrap="wrap" justifyContent="center">
+          <TextField
+            label="Search by name"
+            value={search}
+            onChange={handleSearch}
+            onKeyDown={(e) => e.key === 'Enter' && fetchSweets()}
+            size="small"
+            sx={{ minWidth: 220 }}
+            placeholder="e.g., Gulab Jamun"
+          />
+
+          <TextField
+            select
+            label="Category"
+            value={category}
+            onChange={handleCategoryChange}
+            size="small"
+            sx={{ minWidth: 160 }}
+          >
+            <MenuItem value="">All Categories</MenuItem>
+            <MenuItem value="Indian">Indian</MenuItem>
+            <MenuItem value="Western">Western</MenuItem>
+            <MenuItem value="Bengali">Bengali</MenuItem>
+            <MenuItem value="Gujarati">Gujarati</MenuItem>
+          </TextField>
+
+          <TextField
+            label="Min Price"
+            type="number"
+            value={minPrice}
+            onChange={handleMinPriceChange}
+            size="small"
+            sx={{ minWidth: 130 }}
+            placeholder="0"
+          />
+
+          <TextField
+            label="Max Price"
+            type="number"
+            value={maxPrice}
+            onChange={handleMaxPriceChange}
+            size="small"
+            sx={{ minWidth: 130 }}
+            placeholder="1000"
+          />
+
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button variant="contained" size="small" onClick={fetchSweets}>
+              Filter
+            </Button>
+            <Button variant="outlined" size="small" onClick={handleResetFilters}>
+              Reset
+            </Button>
+          </Box>
+        </Stack>
+      </Paper>
 
       {/* Sweets Display Area */}
       {loading ? (
@@ -201,7 +192,7 @@ const Home = () => {
         </Box>
       ) : (
         // Grid of sweet cards
-        <Grid container spacing={4}>
+        <Grid container spacing={3}>
           {sweets.map((sweet) => (
             <Grid item xs={12} sm={6} md={4} key={sweet.id}>
               <SweetCard 
