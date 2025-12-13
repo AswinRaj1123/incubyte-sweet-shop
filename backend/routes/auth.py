@@ -1,94 +1,119 @@
 import os
-from fastapi import APIRouter, HTTPException
-from ..models.user import UserInDB
-from ..database import users
+from fastapi import APIRouter, HTTPException, Depends, status
 from passlib.context import CryptContext
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
-from fastapi import Depends, status
 from fastapi.security import OAuth2PasswordBearer
 
-_fake_users = {}
+from ..database import users  # MongoDB users collection
 
-SECRET_KEY = os.getenv("JWT_SECRET", "super-secret-key")  # from .env
+# =========================
+# CONFIG
+# =========================
+
+SECRET_KEY = os.getenv("JWT_SECRET", "super-secret-key")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 1 day
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
+# =========================
+# AUTH DEPENDENCY
+# =========================
+
 def get_current_user(token: str = Depends(oauth2_scheme)):
     if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated"
+            detail="Not authenticated",
         )
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
+        role: str = payload.get("role", "user")
+
         if email is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token"
+                detail="Invalid token",
             )
+
         return {
             "email": email,
-            "role": payload.get("role", "user")
+            "role": role,
         }
+
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token"
+            detail="Invalid token",
         )
+
+# =========================
+# REGISTER
+# =========================
 
 @router.post("/register")
 async def register(user_data: dict):
-    try:
-        existing = await users.find_one({"email": user_data["email"]})
-    except Exception:
-        existing = _fake_users.get(user_data["email"])
+    # Check if user already exists
+    existing = await users.find_one({"email": user_data["email"]})
 
     if existing:
         return {
-            "email": user_data["email"],
-            "id": str(existing.get("_id", "existing-id"))
+            "email": existing["email"],
+            "id": str(existing["_id"]),
         }
 
-    hashed = pwd_context.hash(user_data["password"])
+    # Hash password
+    hashed_password = pwd_context.hash(user_data["password"])
+
     new_user = {
         "email": user_data["email"],
-        "hashed_password": hashed,
-        "role": "user"
+        "hashed_password": hashed_password,
+        "role": "user",  # default role
     }
 
-    try:
-        result = await users.insert_one(new_user)
-        new_id = str(result.inserted_id)
-    except Exception:
-        _fake_users[user_data["email"]] = new_user
-        new_id = "mock-id"
+    result = await users.insert_one(new_user)
 
-    return {"email": user_data["email"], "id": new_id}
+    return {
+        "email": user_data["email"],
+        "id": str(result.inserted_id),
+    }
+
+# =========================
+# LOGIN
+# =========================
 
 @router.post("/login")
 async def login(user_data: dict):
-    try:
-        user = await users.find_one({"email": user_data["email"]})
-    except Exception:
-        user = _fake_users.get(user_data["email"])
+    user = await users.find_one({"email": user_data["email"]})
 
     if not user or not pwd_context.verify(
         user_data["password"], user["hashed_password"]
     ):
-        raise HTTPException(status_code=401, detail="Wrong email or password")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Wrong email or password",
+        )
 
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+
     token = jwt.encode(
-        {"sub": user["email"], "role": user.get("role", "user"), "exp": expire},
+        {
+            "sub": user["email"],
+            "role": user.get("role", "user"),
+            "exp": expire,
+        },
         SECRET_KEY,
-        algorithm=ALGORITHM
+        algorithm=ALGORITHM,
     )
 
-    return {"token": token, "email": user["email"], "role": user["role"]}
+    return {
+        "token": token,
+        "email": user["email"],
+        "role": user["role"],
+    }
