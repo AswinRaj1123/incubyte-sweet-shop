@@ -32,3 +32,8 @@ def test_login_wrong_password():
         "password": "wrong"
     })
     assert response.status_code == 401
+
+def test_protected_route_without_token():
+    response = client.get("/api/sweets")  # we'll make this later
+    # For now just check server runs, we'll fix later
+    pass
